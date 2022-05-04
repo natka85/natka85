@@ -1,0 +1,289 @@
+{
+	"info": {
+		"_postman_id": "ca24b891-d90b-440d-8fb9-697df4b95ea5",
+		"name": "YouTrack",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get Progect",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () \r",
+							"{\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"var jsonData = pm.response.json();\r",
+							"pm.collectionVariables.set(\"progectID\",jsonData[1].id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{URL}}api/admin/projects?fields=id,name,shortName",
+					"host": [
+						"{{URL}}api"
+					],
+					"path": [
+						"admin",
+						"projects"
+					],
+					"query": [
+						{
+							"key": "fields",
+							"value": "id,name,shortName"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New issue",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var rnd = Math.random();\r",
+							"pm.test(\"PreRequest\", function() {\r",
+							"    pm.collectionVariables.set(\"summary\", \"Tejhrib\" + rnd);\r",
+							"    pm.collectionVariables.set(\"description\", \"Description\" + rnd);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () \r",
+							"{\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"var jsonData = pm.response.json();\r",
+							"pm.collectionVariables.set(\"issueID\",jsonData.id);\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"project\": {\r\n        \"id\": \"{{progectID}}\"\r\n        },\r\n    \"summary\": \"{{summary}}\",\r\n    \"description\":\"{{description}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}api/issues",
+					"host": [
+						"{{URL}}api"
+					],
+					"path": [
+						"issues"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get issue",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Summary test\", function () {\r",
+							"    pm.expect(jsonData.summary).to.eql(pm.collectionVariables.get(\"summary\"));\r",
+							"});\r",
+							"pm.test(\"Description test\", function () {\r",
+							"    pm.expect(jsonData.description).to.eql(pm.collectionVariables.get(\"description\"));\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}api/issues/{{issueID}}?fields=$type,id,summary,description,customFields($type,id,projectCustomField($type,id,field($type,id,name)),value($type,avatarUrl,buildLink,color(id),fullName,id,isResolved,localizedName,login,minutes,name,presentation,text))",
+					"host": [
+						"{{URL}}api"
+					],
+					"path": [
+						"issues",
+						"{{issueID}}"
+					],
+					"query": [
+						{
+							"key": "fields",
+							"value": "$type,id,summary,description,customFields($type,id,projectCustomField($type,id,field($type,id,name)),value($type,avatarUrl,buildLink,color(id),fullName,id,isResolved,localizedName,login,minutes,name,presentation,text))"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Assigned",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"pm.test(\"Assignee test\", function () {\r",
+							"    pm.expect(jsonData.customFields[3].value.name).to.eql(\"bds_vv_mvd@bk.ru\");\r",
+							"});\r",
+							"pm.test(\"State test\", function () {\r",
+							"    pm.expect(jsonData.customFields[2].value.name).to.eql(\"In Progress\");\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\"customFields\": \r\n [\r\n    {\"name\":\"Assignee\",\"$type\":\"SingleUserIssueCustomField\",\"value\":{\"login\":\"bds_vv_mvd@bk.ru\"}},\r\n    {\"name\":\"State\",\"$type\":\"StateIssueCustomField\",\"value\":{\"name\":\"In Progress\"}}\r\n ] \r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}api/issues/{{issueID}}?fields=customFields(id,name,value(avatarUrl,buildLink,color(id),fullName,id,isResolved,localizedName,login,minutes,name,presentation,text))",
+					"host": [
+						"{{URL}}api"
+					],
+					"path": [
+						"issues",
+						"{{issueID}}"
+					],
+					"query": [
+						{
+							"key": "fields",
+							"value": "customFields(id,name,value(avatarUrl,buildLink,color(id),fullName,id,isResolved,localizedName,login,minutes,name,presentation,text))"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "username",
+				"value": "t.natka@mail.ru",
+				"type": "string"
+			},
+			{
+				"key": "password",
+				"value": "123456",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "URL",
+			"value": "http://89.223.126.182:8080/",
+			"type": "string"
+		},
+		{
+			"key": "REST API lets you create issues!",
+			"value": ""
+		},
+		{
+			"key": "JOPA",
+			"value": ""
+		},
+		{
+			"key": "progectID",
+			"value": ""
+		},
+		{
+			"key": "summary",
+			"value": ""
+		},
+		{
+			"key": "description",
+			"value": ""
+		},
+		{
+			"key": "issueID",
+			"value": ""
+		}
+	]
+}
